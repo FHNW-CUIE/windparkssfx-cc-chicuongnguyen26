@@ -1,15 +1,25 @@
-.simple-control {
+.tachometer {
     -fx-padding:          5;
     -fx-background-color: rgb(12, 12, 12);
     -base-color:          rgb(2, 138, 204);
 }
 
-.simple-control .background-circle {
+.tachometer .background-circle {
     -fx-fill: -base-color;
 }
 
-.simple-control .display {
+.tachometer .display {
     -fx-font-family: 'Lato Light';
     -fx-font-size:   24;
     -fx-fill:        derive(-base-color, 90%);
+}
+
+.tachometer .thumb {
+    -fx-fill: #3E82F7;
+}
+
+.tachometer .frame {
+    -fx-fill      : #A2C5FF;
+    -fx-arc-height: 15;
+    -fx-arc-width : 15;
 }

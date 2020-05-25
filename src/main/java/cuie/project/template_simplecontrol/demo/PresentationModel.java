@@ -1,14 +1,12 @@
 package cuie.project.template_simplecontrol.demo;
 
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.*;
 import javafx.scene.paint.Color;
 
 public class PresentationModel {
-    private final DoubleProperty        pmValue   = new SimpleDoubleProperty();
-    private final ObjectProperty<Color> baseColor = new SimpleObjectProperty<>();
+    private final DoubleProperty        pmValue         = new SimpleDoubleProperty();
+    private final ObjectProperty<Color> baseColor       = new SimpleObjectProperty<>();
+    private final BooleanProperty       running = new SimpleBooleanProperty(true);
 
     public double getPmValue() {
         return pmValue.get();
@@ -32,5 +30,17 @@ public class PresentationModel {
 
     public void setBaseColor(Color baseColor) {
         this.baseColor.set(baseColor);
+    }
+
+    public boolean getRunning() {
+        return running.get();
+    }
+
+    public BooleanProperty runningProperty() {
+        return running;
+    }
+
+    public void setRunning(boolean running) {
+        this.running.set(running);
     }
 }

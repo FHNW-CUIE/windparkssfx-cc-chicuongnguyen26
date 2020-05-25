@@ -4,21 +4,24 @@ import javafx.geometry.Insets;
 import javafx.scene.control.ColorPicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
+import javafx.scene.control.RadioButton;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 
-import cuie.project.template_simplecontrol.SimpleControl;
+import cuie.project.template_simplecontrol.Tachometer;
 
 public class DemoPane extends BorderPane {
 
     private final PresentationModel pm;
 
     // declare the custom control
-    private SimpleControl cc;
+    private Tachometer tachometer;
+
 
     // all controls
     private Slider      slider;
     private ColorPicker colorPicker;
+    private RadioButton stateSwitch;
 
     public DemoPane(PresentationModel pm) {
         this.pm = pm;
@@ -30,31 +33,34 @@ public class DemoPane extends BorderPane {
     private void initializeControls() {
         setPadding(new Insets(10));
 
-        cc = new SimpleControl();
-
-        slider = new Slider();
+        tachometer  = new Tachometer();
+        slider      = new Slider();
         slider.setShowTickLabels(true);
 
         colorPicker = new ColorPicker();
+        stateSwitch = new RadioButton("running");
+
     }
 
     private void layoutControls() {
         VBox controlPane = new VBox(new Label("SimpleControl Properties"),
-                                    slider, colorPicker);
+                                    slider, stateSwitch, colorPicker);
         controlPane.setPadding(new Insets(0, 50, 0, 50));
         controlPane.setSpacing(10);
 
-        setCenter(cc);
+        setCenter(tachometer);
         setRight(controlPane);
     }
 
     private void setupBindings() {
         slider.valueProperty().bindBidirectional(pm.pmValueProperty());
         colorPicker.valueProperty().bindBidirectional(pm.baseColorProperty());
+        stateSwitch.selectedProperty().bindBidirectional(pm.runningProperty());
 
-
-        cc.valueProperty().bindBidirectional(pm.pmValueProperty());
-        cc.baseColorProperty().bindBidirectional(pm.baseColorProperty());
+        //bindings Controls to pm
+        tachometer.valueProperty().bindBidirectional(pm.pmValueProperty());
+        tachometer.baseColorProperty().bindBidirectional(pm.baseColorProperty());
+        tachometer.onProperty().bindBidirectional(pm.runningProperty());
     }
 
 }

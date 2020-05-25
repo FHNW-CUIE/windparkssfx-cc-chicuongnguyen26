@@ -19,27 +19,34 @@ import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.geometry.VPos;
 import javafx.scene.Group;
+import javafx.scene.effect.BlurType;
+import javafx.scene.effect.DropShadow;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.scene.text.TextBoundsType;
 import javafx.util.Duration;
+import org.w3c.dom.css.Rect;
 
 /**
- * ToDo: CustomControl kurz beschreiben
  *
- * ToDo: Autoren ergänzen / ersetzen
- * @author
+ * The tachometer displays the performance of the windmill
+ * through the propeller and the value in the middle
+ * in addition you can see and change the state of the windmill with the radionbutton in the middle
+ *
+ * @author Cristine Paduga / Chi Cuong Nguyen
  */
-//ToDo: Umbenennen.
-public class SimpleControl extends Region {
+
+public class Tachometer extends Region {
     // wird gebraucht fuer StyleableProperties
-    private static final StyleablePropertyFactory<SimpleControl> FACTORY = new StyleablePropertyFactory<>(Region.getClassCssMetaData());
+    private static final StyleablePropertyFactory<Tachometer> FACTORY = new StyleablePropertyFactory<>(Region.getClassCssMetaData());
 
     @Override
     public List<CssMetaData<? extends Styleable, ?>> getCssMetaData() {
@@ -59,14 +66,17 @@ public class SimpleControl extends Region {
     private static final double MAXIMUM_WIDTH = 800;    // ToDo: Anpassen
 
     // ToDo: diese Parts durch alle notwendigen Parts der gewünschten CustomControl ersetzen
-    private Circle backgroundCircle;
-    private Text   display;
+    private Circle      backgroundCircle;
+    private Text        display;
+    private Circle      thumb;
+    private Rectangle   frame;
 
     // ToDo: ersetzen durch alle notwendigen Properties der CustomControl
     private final DoubleProperty value = new SimpleDoubleProperty();
+    private final BooleanProperty on    = new SimpleBooleanProperty();
 
     // ToDo: ergänzen mit allen CSS stylable properties
-    private static final CssMetaData<SimpleControl, Color> BASE_COLOR_META_DATA = FACTORY.createColorCssMetaData("-base-color", s -> s.baseColor);
+    private static final CssMetaData<Tachometer, Color> BASE_COLOR_META_DATA = FACTORY.createColorCssMetaData("-base-color", s -> s.baseColor);
 
     private final StyleableObjectProperty<Color> baseColor = new SimpleStyleableObjectProperty<Color>(BASE_COLOR_META_DATA) {
         @Override
@@ -100,7 +110,7 @@ public class SimpleControl extends Region {
     // fuer Resizing benoetigt
     private Pane drawingPane;
 
-    public SimpleControl() {
+    public Tachometer() {
         initializeSelf();
         initializeParts();
         initializeDrawingPane();
@@ -115,7 +125,7 @@ public class SimpleControl extends Region {
         loadFonts("/fonts/Lato/Lato-Lig.ttf", "/fonts/Lato/Lato-Reg.ttf");
         addStylesheetFiles("style.css");
 
-        getStyleClass().add("simple-control");  // ToDo: an den Namen der Klasse (des CustomControls) anpassen
+        getStyleClass().add("tachometer");
     }
 
     private void initializeParts() {
@@ -126,6 +136,16 @@ public class SimpleControl extends Region {
         backgroundCircle.getStyleClass().add("background-circle");
 
         display = createCenteredText("display");
+
+        thumb = new Circle(12,13,10);
+        thumb.getStyleClass().add("thumb");
+        thumb.setStrokeWidth(0);
+        thumb.setEffect(new DropShadow(BlurType.GAUSSIAN, Color.rgb(0,0,0,0.3),4,
+                0,0,1));
+
+        frame = new Rectangle(5.0, 5.0, ARTBOARD_WIDTH - 70.0, ARTBOARD_HEIGHT -85.0);
+        frame.getStyleClass().add("frame");
+        frame.setMouseTransparent(true);
     }
 
     private void initializeDrawingPane() {
@@ -142,13 +162,14 @@ public class SimpleControl extends Region {
 
     private void layoutParts() {
         //ToDo: alle Parts zur drawingPane hinzufügen
-        drawingPane.getChildren().addAll(backgroundCircle, display);
+        drawingPane.getChildren().addAll(backgroundCircle, display, frame, thumb);
 
         getChildren().add(drawingPane);
     }
 
     private void setupEventHandlers() {
         //ToDo: bei Bedarf ergänzen
+        drawingPane.setOnMouseClicked(event -> setOn(!isOn()));
     }
 
     private void setupValueChangeListeners() {
@@ -157,6 +178,9 @@ public class SimpleControl extends Region {
 
         // fuer die getaktete Animation
         blinking.addListener((observable, oldValue, newValue) -> startClockedAnimation(newValue));
+
+        onProperty().addListener((observable, oldValue, newValue) -> updateUI());
+
     }
 
     private void setupBindings() {
@@ -166,6 +190,16 @@ public class SimpleControl extends Region {
 
     private void updateUI(){
         //ToDo : ergaenzen mit dem was bei einer Wertaenderung einer Status-Property im UI upgedated werden muss
+        if (isOn()) {
+            thumb.setLayoutX(16);
+            thumb.setFill(Paint.valueOf("#32CD32"));
+            frame.setFill(Paint.valueOf("#BCEE68"));
+        }
+        else {
+            thumb.setLayoutX(0);
+            thumb.setFill(Paint.valueOf("#3E82F7"));
+            frame.setFill(Paint.valueOf("#A2C5FF"));
+        }
     }
 
     private void performPeriodicTask(){
@@ -515,5 +549,17 @@ public class SimpleControl extends Region {
 
     public void setPulse(Duration pulse) {
         this.pulse.set(pulse);
+    }
+
+    public boolean isOn() {
+        return on.get();
+    }
+
+    public BooleanProperty onProperty() {
+        return on;
+    }
+
+    public void setOn(boolean on) {
+        this.on.set(on);
     }
 }
