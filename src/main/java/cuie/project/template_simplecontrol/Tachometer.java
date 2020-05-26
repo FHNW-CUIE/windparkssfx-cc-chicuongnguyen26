@@ -3,7 +3,7 @@ package cuie.project.template_simplecontrol;
 import java.util.List;
 import java.util.Locale;
 
-import javafx.animation.AnimationTimer;
+import javafx.animation.*;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
@@ -47,6 +47,11 @@ import org.w3c.dom.css.Rect;
 public class Tachometer extends Region {
     // wird gebraucht fuer StyleableProperties
     private static final StyleablePropertyFactory<Tachometer> FACTORY = new StyleablePropertyFactory<>(Region.getClassCssMetaData());
+    //Animation switch
+    private static final Color THUMB_ON  = Color.rgb( 62, 130, 247);
+    private static final Color THUMB_OFF = Color.rgb(250, 250, 250);
+    private static final Color FRAME_ON  = Color.rgb(162, 197, 255);
+    private static final Color FRAME_OFF = Color.rgb(153, 153, 153);
 
     @Override
     public List<CssMetaData<? extends Styleable, ?>> getCssMetaData() {
@@ -89,6 +94,10 @@ public class Tachometer extends Region {
     // ToDo: Loeschen falls keine getaktete Animation benoetigt wird
     private final BooleanProperty          blinking = new SimpleBooleanProperty(false);
     private final ObjectProperty<Duration> pulse    = new SimpleObjectProperty<>(Duration.seconds(1.0));
+
+    // all animations
+    private Transition onTransition;
+    private Transition offTransition;
 
     private final AnimationTimer timer = new AnimationTimer() {
         private long lastTimerCall;
@@ -158,6 +167,33 @@ public class Tachometer extends Region {
 
     private void initializeAnimations(){
         //ToDo: alle deklarierten Animationen initialisieren
+        TranslateTransition onTranslation = new TranslateTransition(Duration.millis(500), thumb);
+        onTranslation.setFromX(0);
+        onTranslation.setToX(16);
+
+        FillTransition onFill = new FillTransition(Duration.millis(500), frame);
+        onFill.setFromValue(FRAME_OFF);
+        onFill.setToValue(FRAME_ON);
+
+        FillTransition onFillThumb = new FillTransition(Duration.millis(500), thumb);
+        onFillThumb.setFromValue(THUMB_OFF);
+        onFillThumb.setToValue(THUMB_ON);
+
+        onTransition = new ParallelTransition(onTranslation, onFill, onFillThumb);
+
+        TranslateTransition offTranslation = new TranslateTransition(Duration.millis(500), thumb);
+        offTranslation.setFromX(16);
+        offTranslation.setToX(0);
+
+        FillTransition offFill = new FillTransition(Duration.millis(500), frame);
+        offFill.setFromValue(FRAME_ON);
+        offFill.setToValue(FRAME_OFF);
+
+        FillTransition offFillThumb = new FillTransition(Duration.millis(500), thumb);
+        offFillThumb.setFromValue(THUMB_ON);
+        offFillThumb.setToValue(THUMB_OFF);
+
+        offTransition = new ParallelTransition(offTranslation, offFill, offFillThumb);
     }
 
     private void layoutParts() {
@@ -190,7 +226,7 @@ public class Tachometer extends Region {
 
     private void updateUI(){
         //ToDo : ergaenzen mit dem was bei einer Wertaenderung einer Status-Property im UI upgedated werden muss
-        if (isOn()) {
+        /*if (isOn()) {
             thumb.setLayoutX(16);
             thumb.setFill(Paint.valueOf("#32CD32"));
             frame.setFill(Paint.valueOf("#BCEE68"));
@@ -199,6 +235,13 @@ public class Tachometer extends Region {
             thumb.setLayoutX(0);
             thumb.setFill(Paint.valueOf("#3E82F7"));
             frame.setFill(Paint.valueOf("#A2C5FF"));
+        }*/
+        onTransition.stop();
+        offTransition.stop();
+        if(isOn()){
+            onTransition.play();
+        }else {
+            offTransition.play();
         }
     }
 
