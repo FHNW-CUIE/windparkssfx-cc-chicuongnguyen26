@@ -60,8 +60,8 @@ public class Tachometer extends Region {
 
     private static final Locale CH = new Locale("de", "CH");
 
-    private static final double ARTBOARD_WIDTH  = 100;  // ToDo: Breite der "Zeichnung" aus dem Grafik-Tool übernehmen
-    private static final double ARTBOARD_HEIGHT = 100;  // ToDo: Anpassen an die Breite der Zeichnung
+    private static final double ARTBOARD_WIDTH  = 500;  // ToDo: Breite der "Zeichnung" aus dem Grafik-Tool übernehmen
+    private static final double ARTBOARD_HEIGHT = 500;  // ToDo: Anpassen an die Breite der Zeichnung
 
     private static final double ASPECT_RATIO = ARTBOARD_WIDTH / ARTBOARD_HEIGHT;
 
@@ -139,7 +139,7 @@ public class Tachometer extends Region {
 
     private void initializeParts() {
         //ToDo: alle deklarierten Parts initialisieren
-        double center = ARTBOARD_WIDTH * 0.5;
+        double center = ARTBOARD_WIDTH * (0.5*5);
 
         backgroundCircle = new Circle(center, center, center);
         backgroundCircle.getStyleClass().add("background-circle");
@@ -152,7 +152,7 @@ public class Tachometer extends Region {
         thumb.setEffect(new DropShadow(BlurType.GAUSSIAN, Color.rgb(0,0,0,0.3),4,
                 0,0,1));
 
-        frame = new Rectangle(5.0, 5.0, ARTBOARD_WIDTH - 70.0, ARTBOARD_HEIGHT -85.0);
+        frame = new Rectangle(5.0, 5.0, ARTBOARD_WIDTH - (93.5 * 5), ARTBOARD_HEIGHT - (97.0 * 5));
         frame.getStyleClass().add("frame");
         frame.setMouseTransparent(true);
     }
