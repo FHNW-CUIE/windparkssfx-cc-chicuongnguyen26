@@ -9,6 +9,8 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 
 import cuie.project.template_simplecontrol.Tachometer;
+import javafx.scene.shape.Circle;
+import javafx.scene.shape.Polygon;
 
 public class DemoPane extends BorderPane {
 
@@ -19,9 +21,10 @@ public class DemoPane extends BorderPane {
 
 
     // all controls
-    private Slider      slider;
-    private ColorPicker colorPicker;
-    private RadioButton stateSwitch;
+    private Slider          slider;
+    private ColorPicker     colorPicker;
+    private RadioButton     stateSwitch;
+
 
     public DemoPane(PresentationModel pm) {
         this.pm = pm;
@@ -39,6 +42,8 @@ public class DemoPane extends BorderPane {
 
         colorPicker = new ColorPicker();
         stateSwitch = new RadioButton("running");
+
+
 
     }
 

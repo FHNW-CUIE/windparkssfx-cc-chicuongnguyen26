@@ -27,13 +27,13 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
+import javafx.scene.shape.Polygon;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.scene.text.TextBoundsType;
 import javafx.util.Duration;
-import org.w3c.dom.css.Rect;
 
 /**
  *
@@ -55,8 +55,8 @@ public class Tachometer extends Region {
 
     private static final Locale CH = new Locale("de", "CH");
 
-    private static final double ARTBOARD_WIDTH  = 100;  // ToDo: Breite der "Zeichnung" aus dem Grafik-Tool übernehmen
-    private static final double ARTBOARD_HEIGHT = 100;  // ToDo: Anpassen an die Breite der Zeichnung
+    private static final double ARTBOARD_WIDTH  = 200;  // ToDo: Breite der "Zeichnung" aus dem Grafik-Tool übernehmen
+    private static final double ARTBOARD_HEIGHT = 200;  // ToDo: Anpassen an die Breite der Zeichnung
 
     private static final double ASPECT_RATIO = ARTBOARD_WIDTH / ARTBOARD_HEIGHT;
 
@@ -68,6 +68,8 @@ public class Tachometer extends Region {
     // ToDo: diese Parts durch alle notwendigen Parts der gewünschten CustomControl ersetzen
     private Circle      backgroundCircle;
     private Text        display;
+    private Polygon     propeller;
+
     private Circle      thumb;
     private Rectangle   frame;
 
@@ -132,18 +134,31 @@ public class Tachometer extends Region {
         //ToDo: alle deklarierten Parts initialisieren
         double center = ARTBOARD_WIDTH * 0.5;
 
-        backgroundCircle = new Circle(center, center, center);
+        backgroundCircle = new Circle(100, 125, 50);
         backgroundCircle.getStyleClass().add("background-circle");
 
         display = createCenteredText("display");
 
-        thumb = new Circle(12,13,10);
+        propeller = new Polygon();
+        propeller.getStyleClass().add("propeller");
+        propeller.getPoints().setAll(
+                100.0, 0.0, //Spitze oben
+                70.0, 100.0, // Ecke links oben
+                0.0, 200.0, // Spitze links
+                70.0, 160.0, // Linie links
+                130.0, 160.0, // Linie rechts
+                200.0, 200.0, // Spitze rechts
+                130.0, 100.0 // Ecke rechts oben
+        );
+
+
+        thumb = new Circle(backgroundCircle.getCenterX()* 0.9, backgroundCircle.getCenterY() * 0.75,7);
         thumb.getStyleClass().add("thumb");
         thumb.setStrokeWidth(0);
         thumb.setEffect(new DropShadow(BlurType.GAUSSIAN, Color.rgb(0,0,0,0.3),4,
                 0,0,1));
 
-        frame = new Rectangle(5.0, 5.0, ARTBOARD_WIDTH - 70.0, ARTBOARD_HEIGHT -85.0);
+        frame = new Rectangle(backgroundCircle.getCenterX() * 0.85 , backgroundCircle.getCenterY() * 0.71, 25, 10);
         frame.getStyleClass().add("frame");
         frame.setMouseTransparent(true);
     }
@@ -162,7 +177,7 @@ public class Tachometer extends Region {
 
     private void layoutParts() {
         //ToDo: alle Parts zur drawingPane hinzufügen
-        drawingPane.getChildren().addAll(backgroundCircle, display, frame, thumb);
+        drawingPane.getChildren().addAll(propeller, backgroundCircle, display, frame, thumb);
 
         getChildren().add(drawingPane);
     }
@@ -399,7 +414,7 @@ public class Tachometer extends Region {
      * @return Text
      */
     private Text createCenteredText(String styleClass) {
-        return createCenteredText(ARTBOARD_WIDTH * 0.5, ARTBOARD_HEIGHT * 0.5, styleClass);
+        return createCenteredText(backgroundCircle.getCenterX() , backgroundCircle.getCenterY(), styleClass);
     }
 
     /**

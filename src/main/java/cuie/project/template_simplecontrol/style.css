@@ -5,13 +5,17 @@
 }
 
 .tachometer .background-circle {
-    -fx-fill: -base-color;
+    -fx-fill: #B7C1C5;
+}
+
+.tachometer .propeller{
+    -fx-fill: #3C98AC;
 }
 
 .tachometer .display {
     -fx-font-family: 'Lato Light';
     -fx-font-size:   24;
-    -fx-fill:        derive(-base-color, 90%);
+    -fx-fill:        black;
 }
 
 .tachometer .thumb {
