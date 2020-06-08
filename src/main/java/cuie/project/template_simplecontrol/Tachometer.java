@@ -19,12 +19,15 @@ import javafx.css.StyleableObjectProperty;
 import javafx.css.StyleablePropertyFactory;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
+import javafx.geometry.Pos;
 import javafx.geometry.VPos;
 import javafx.scene.Group;
 import javafx.scene.effect.BlurType;
 import javafx.scene.effect.DropShadow;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.*;
@@ -75,6 +78,8 @@ public class Tachometer extends Region {
     private static final Duration ANIMATION_DURATION = Duration.millis(400);
 
     // ToDo: diese Parts durch alle notwendigen Parts der gewünschten CustomControl ersetzen
+    private BorderPane rootPropeller;
+
     //dial tachometer
     private Group       ticks;
     private List<Text>  tickLabels;
@@ -173,6 +178,10 @@ public class Tachometer extends Region {
         double center = ARTBOARD_WIDTH * 0.5;
         int width = 0;
         double radius = center - width;
+
+        rootPropeller = new BorderPane();
+        rootPropeller.getStyleClass().add("root-propeller");
+        rootPropeller.setCenter(propeller);
 
         dial = new Arc(center, center, radius, radius, 270.0, 0.0);
         dial.getStyleClass().add("dial");
@@ -276,15 +285,18 @@ public class Tachometer extends Region {
 
     private void layoutParts() {
         //ToDo: alle Parts zur drawingPane hinzufügen
-        drawingPane.getChildren().addAll(dial, ticks, propeller, backgroundCircle, display, frame, thumb);
+        rootPropeller.getChildren().add(propeller);
+        drawingPane.getChildren().addAll(dial, ticks, rootPropeller, backgroundCircle, display, frame, thumb);
         drawingPane.getChildren().addAll(tickLabels);
+
 
         getChildren().add(drawingPane);
     }
 
     private void setupEventHandlers() {
         //ToDo: bei Bedarf ergänzen
-        drawingPane.setOnMouseClicked(event -> setOn(!isOn()));
+        thumb.setOnMouseClicked(event -> setOn(!isOn()));
+
 
         propeller.setOnMouseDragged(event -> {
             double center = 300 * 0.5;
@@ -301,8 +313,9 @@ public class Tachometer extends Region {
         minValueProperty().addListener(minMaxListener);
         maxValueProperty().addListener(minMaxListener);
 
-        valueProperty().addListener((observable, oldValue, newValue) -> updateUI());
-        valueProperty().addListener((observable, oldValue, newValue) -> {
+        //valueProperty().addListener((observable, oldValue, newValue) -> updateUI());
+        //valueProperty().addListener((observable, oldValue, newValue) -> rotateProperty());
+        /*valueProperty().addListener((observable, oldValue, newValue) -> {
             if (isAnimated()) {
                 timeline.stop();
                 timeline.getKeyFrames().setAll(new KeyFrame(ANIMATION_DURATION,
@@ -314,13 +327,13 @@ public class Tachometer extends Region {
             } else {
                 setAnimatedValue(newValue.doubleValue());
             }
-        });
+        });*/
 
 
-        animatedValueProperty().addListener((observable, oldValue, newValue) -> {
+       /** animatedValueProperty().addListener((observable, oldValue, newValue) -> {
             setPercentage(valueToPercentage(newValue.doubleValue(), getMinValue(), getMaxValue()));
             setAngle(percentageToAngle(getPercentage()));
-        });
+        });*/
 
         // fuer die getaktete Animation
         blinking.addListener((observable, oldValue, newValue) -> startClockedAnimation(newValue));
@@ -333,6 +346,9 @@ public class Tachometer extends Region {
         //ToDo: dieses Binding ersetzen
         display.textProperty().bind(valueProperty().asString(CH, "%.2f"));
         dial.lengthProperty().bind(angleProperty().multiply(-1.0));
+    }
+
+    private void rotatePropeller() {
     }
 
     private void updateUI(){
