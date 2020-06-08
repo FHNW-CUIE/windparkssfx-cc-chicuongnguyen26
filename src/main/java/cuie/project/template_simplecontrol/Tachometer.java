@@ -168,7 +168,7 @@ public class Tachometer extends Region {
         propeller = new Polygon();
         propeller.getStyleClass().add("propeller");
         propeller.getPoints().setAll(
-                ARTBOARD_HEIGHT/2, 30.0, //Spitze oben
+                ARTBOARD_HEIGHT/2, 32.0, //Spitze oben
                 190.0, 200.0, // Spitze links
                 310.0, 200.0 // Spitze rechts
         );
