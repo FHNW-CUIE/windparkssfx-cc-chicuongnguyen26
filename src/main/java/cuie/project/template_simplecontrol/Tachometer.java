@@ -44,11 +44,14 @@ import javafx.util.Duration;
  */
 
 public class Tachometer extends Region {
+
     // wird gebraucht fuer StyleableProperties
     private static final Color THUMB_ON  = Color.rgb( 62, 130, 247);
     private static final Color THUMB_OFF = Color.rgb(250, 250, 250);
     private static final Color FRAME_ON  = Color.rgb(162, 197, 255);
     private static final Color FRAME_OFF = Color.rgb(153, 153, 153);
+    private static final Color PROPELLER_ON = Color.rgb(60, 152, 172);
+    private static final Color PROPELLER_OFF = Color.rgb(183, 193, 197);
 
     private static final StyleablePropertyFactory<Tachometer> FACTORY = new StyleablePropertyFactory<>(Region.getClassCssMetaData());
 
@@ -245,7 +248,12 @@ public class Tachometer extends Region {
         onFillThumb.setFromValue(THUMB_OFF);
         onFillThumb.setToValue(THUMB_ON);
 
-        onTransition = new ParallelTransition(onTranslation, onFill, onFillThumb);
+        FillTransition onFillPropeller = new FillTransition(Duration.millis(500), propeller);
+        onFillPropeller.setFromValue(PROPELLER_OFF);
+        onFillPropeller.setToValue(PROPELLER_ON);
+
+
+        onTransition = new ParallelTransition(onTranslation, onFill, onFillThumb, onFillPropeller);
 
         TranslateTransition offTranslation = new TranslateTransition(Duration.millis(500), thumb);
         offTranslation.setFromX(16);
@@ -259,7 +267,11 @@ public class Tachometer extends Region {
         offFillThumb.setFromValue(THUMB_ON);
         offFillThumb.setToValue(THUMB_OFF);
 
-        offTransition = new ParallelTransition(offTranslation, offFill, offFillThumb);
+        FillTransition offFillPropeller = new FillTransition(Duration.millis(500), propeller);
+        offFillPropeller.setFromValue(PROPELLER_ON);
+        offFillPropeller.setToValue(PROPELLER_OFF);
+
+        offTransition = new ParallelTransition(offTranslation, offFill, offFillThumb, offFillPropeller);
     }
 
     private void layoutParts() {
@@ -340,10 +352,10 @@ public class Tachometer extends Region {
         offTransition.stop();
         if(isOn()){
             onTransition.play();
-            propeller.setFill(Paint.valueOf("#3C98AC"));
+            //propeller.setFill(Paint.valueOf("#3C98AC"));
         }else {
             offTransition.play();
-            propeller.setFill(Paint.valueOf("#B7C1C5"));
+            //propeller.setFill(Paint.valueOf("#B7C1C5"));
         }
     }
 
