@@ -42,9 +42,6 @@ public class DemoPane extends BorderPane {
 
         colorPicker = new ColorPicker();
         stateSwitch = new RadioButton("running");
-
-
-
     }
 
     private void layoutControls() {
@@ -66,6 +63,9 @@ public class DemoPane extends BorderPane {
         tachometer.valueProperty().bindBidirectional(pm.pmValueProperty());
         tachometer.baseColorProperty().bindBidirectional(pm.baseColorProperty());
         tachometer.onProperty().bindBidirectional(pm.runningProperty());
+        tachometer.minValueProperty().bindBidirectional(pm.minProperty());
+        tachometer.maxValueProperty().bindBidirectional(pm.maxProperty());
+        tachometer.animatedProperty().bindBidirectional(pm.animatedProperty());
     }
 
 }

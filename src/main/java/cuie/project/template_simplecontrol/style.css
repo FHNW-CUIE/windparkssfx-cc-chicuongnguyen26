@@ -1,6 +1,6 @@
 .tachometer {
     -fx-padding:          5;
-    -fx-background-color: rgb(12, 12, 12);
+    -fx-background-color: white;
     -base-color:          rgb(2, 138, 204);
 }
 
@@ -9,6 +9,10 @@
 }
 
 .tachometer .propeller{
+    -fx-fill: #3C98AC;
+}
+
+.tachometer .pointer, .dial {
     -fx-fill: #3C98AC;
 }
 
