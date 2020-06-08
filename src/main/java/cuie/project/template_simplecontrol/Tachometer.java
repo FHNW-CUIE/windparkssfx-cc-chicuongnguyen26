@@ -175,7 +175,7 @@ public class Tachometer extends Region {
         dial.getStyleClass().add("dial");
         dial.setType(ArcType.OPEN);
 
-        ticks = createTicks(center, center, radius - width-10, 30,  0.0, 360.0,7, "tick");
+        ticks = createTicks(center, center, radius - width-10, 30,  235.0, 250.0,7, "tick");
 
         tickLabels = new ArrayList<>();
 
@@ -183,9 +183,9 @@ public class Tachometer extends Region {
         pointer.getStyleClass().add("pointer");
 
         int labelCount = 8;
-        for (int i = 0; i < labelCount; i++) {
-            double r     = 95;
-            double nextAngle = i * 360.0 / labelCount;
+        for (int i = 0; i <= labelCount; i++) {
+            double r     = -105;
+            double nextAngle = (i * 250.0 + 420)/ labelCount;
 
             Point2D p         = pointOnCircle(center, center, r, nextAngle);
             Text    tickLabel = createCenteredText(p.getX(), p.getY(), "tick-label");
@@ -340,8 +340,10 @@ public class Tachometer extends Region {
         offTransition.stop();
         if(isOn()){
             onTransition.play();
+            propeller.setFill(Paint.valueOf("#3C98AC"));
         }else {
             offTransition.play();
+            propeller.setFill(Paint.valueOf("#B7C1C5"));
         }
     }
 
