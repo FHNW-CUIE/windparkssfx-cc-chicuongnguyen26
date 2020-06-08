@@ -6,7 +6,9 @@ import javafx.scene.paint.Color;
 public class PresentationModel {
     private final DoubleProperty        pmValue         = new SimpleDoubleProperty();
     private final ObjectProperty<Color> baseColor       = new SimpleObjectProperty<>();
-    private final BooleanProperty       running = new SimpleBooleanProperty(true);
+    private final BooleanProperty       running         = new SimpleBooleanProperty(true);
+    private final DoubleProperty        min             = new SimpleDoubleProperty(200.0);
+    private final DoubleProperty        max             = new SimpleDoubleProperty(5000.0);
 
     public double getPmValue() {
         return pmValue.get();
@@ -42,5 +44,29 @@ public class PresentationModel {
 
     public void setRunning(boolean running) {
         this.running.set(running);
+    }
+
+    public double getMax() {
+        return max.get();
+    }
+
+    public DoubleProperty maxProperty() {
+        return max;
+    }
+
+    public void setMax(double max) {
+        this.max.set(max);
+    }
+
+    public double getMin() {
+        return min.get();
+    }
+
+    public DoubleProperty minProperty() {
+        return min;
+    }
+
+    public void setMin(double min) {
+        this.min.set(min);
     }
 }

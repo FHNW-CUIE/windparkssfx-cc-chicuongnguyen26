@@ -1,5 +1,6 @@
 package cuie.project.template_simplecontrol;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -17,12 +18,14 @@ import javafx.css.StyleableObjectProperty;
 import javafx.css.StyleablePropertyFactory;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
+import javafx.geometry.Pos;
 import javafx.geometry.VPos;
 import javafx.scene.Group;
 import javafx.scene.effect.BlurType;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.Circle;
@@ -75,10 +78,15 @@ public class Tachometer extends Region {
     private Text        display;
     private Circle      thumb;
     private Rectangle   frame;
+    private Group      ticks;
+    private List<Text>  tickLabels;
 
     // ToDo: ersetzen durch alle notwendigen Properties der CustomControl
     private final DoubleProperty value = new SimpleDoubleProperty();
     private final BooleanProperty on    = new SimpleBooleanProperty();
+    private final DoubleProperty minPerformance = new SimpleDoubleProperty();
+    private final DoubleProperty maxPerformance = new SimpleDoubleProperty();
+
 
     // ToDo: ergänzen mit allen CSS stylable properties
     private static final CssMetaData<Tachometer, Color> BASE_COLOR_META_DATA = FACTORY.createColorCssMetaData("-base-color", s -> s.baseColor);
@@ -95,9 +103,6 @@ public class Tachometer extends Region {
     private final BooleanProperty          blinking = new SimpleBooleanProperty(false);
     private final ObjectProperty<Duration> pulse    = new SimpleObjectProperty<>(Duration.seconds(1.0));
 
-    // all animations
-    private Transition onTransition;
-    private Transition offTransition;
 
     private final AnimationTimer timer = new AnimationTimer() {
         private long lastTimerCall;
@@ -112,6 +117,8 @@ public class Tachometer extends Region {
     };
 
     // ToDo: alle Animationen und Timelines deklarieren
+    private Transition onTransition;
+    private Transition offTransition;
 
     //private final Timeline timeline = new Timeline();
 
@@ -139,9 +146,9 @@ public class Tachometer extends Region {
 
     private void initializeParts() {
         //ToDo: alle deklarierten Parts initialisieren
-        double center = ARTBOARD_WIDTH * (0.5*5);
+        double center = ARTBOARD_WIDTH * (0.5);
 
-        backgroundCircle = new Circle(center, center, center);
+        backgroundCircle = new Circle(center, center, center * 0.3);
         backgroundCircle.getStyleClass().add("background-circle");
 
         display = createCenteredText("display");
@@ -155,6 +162,21 @@ public class Tachometer extends Region {
         frame = new Rectangle(5.0, 5.0, ARTBOARD_WIDTH - (93.5 * 5), ARTBOARD_HEIGHT - (97.0 * 5));
         frame.getStyleClass().add("frame");
         frame.setMouseTransparent(true);
+
+        ticks = createTicks(center, center, 74, 90, 0, 360, 6, "tick");
+
+        tickLabels = new ArrayList<>();
+
+        int labelCount = 8;
+        for (int i = 0; i < labelCount; i++){
+            double r = 95;
+            double angle = i * 360 / labelCount;
+
+            Point2D p   = pointOnCircle(center, center, r, angle);
+            Text tickLabel = createCenteredText(p.getX(), p.getY(), "tick-label");
+            tickLabels.add(tickLabel);
+        }
+        updateTickLabels();
     }
 
     private void initializeDrawingPane() {
@@ -198,7 +220,8 @@ public class Tachometer extends Region {
 
     private void layoutParts() {
         //ToDo: alle Parts zur drawingPane hinzufügen
-        drawingPane.getChildren().addAll(backgroundCircle, display, frame, thumb);
+        drawingPane.getChildren().addAll(backgroundCircle, display, frame, thumb, ticks);
+        drawingPane.getChildren().addAll(tickLabels);
 
         getChildren().add(drawingPane);
     }
@@ -256,6 +279,16 @@ public class Tachometer extends Region {
         } else {
             timer.stop();
         }
+    }
+
+    private void updateTickLabels() {
+        int labelCount = tickLabels.size();
+        double step    = (getMaxPerformance() - getMinPerformance()) / labelCount;
+        for (int i = 0; i < labelCount; i++) {
+            Text tickLabel = tickLabels.get(i);
+            tickLabel.setText(String.format("%.0f", getMinPerformance() + (i * step)));
+        }
+
     }
 
     @Override
@@ -604,5 +637,29 @@ public class Tachometer extends Region {
 
     public void setOn(boolean on) {
         this.on.set(on);
+    }
+
+    public double getMaxPerformance() {
+        return maxPerformance.get();
+    }
+
+    public DoubleProperty maxPerformanceProperty() {
+        return maxPerformance;
+    }
+
+    public void setMaxPerformance(double maxPerformance) {
+        this.maxPerformance.set(maxPerformance);
+    }
+
+    public double getMinPerformance() {
+        return minPerformance.get();
+    }
+
+    public DoubleProperty minPerformanceProperty() {
+        return minPerformance;
+    }
+
+    public void setMinPerformance(double minPerformance) {
+        this.minPerformance.set(minPerformance);
     }
 }

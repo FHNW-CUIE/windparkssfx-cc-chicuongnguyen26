@@ -1,14 +1,12 @@
 package cuie.project.template_simplecontrol.demo;
 
 import javafx.geometry.Insets;
-import javafx.scene.control.ColorPicker;
-import javafx.scene.control.Label;
-import javafx.scene.control.Slider;
-import javafx.scene.control.RadioButton;
+import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 
 import cuie.project.template_simplecontrol.Tachometer;
+import javafx.util.converter.NumberStringConverter;
 
 public class DemoPane extends BorderPane {
 
@@ -22,6 +20,7 @@ public class DemoPane extends BorderPane {
     private Slider      slider;
     private ColorPicker colorPicker;
     private RadioButton stateSwitch;
+    private TextField   maxField;
 
     public DemoPane(PresentationModel pm) {
         this.pm = pm;
@@ -40,11 +39,13 @@ public class DemoPane extends BorderPane {
         colorPicker = new ColorPicker();
         stateSwitch = new RadioButton("running");
 
+        maxField    = new TextField();
+
     }
 
     private void layoutControls() {
         VBox controlPane = new VBox(new Label("SimpleControl Properties"),
-                                    slider, stateSwitch, colorPicker);
+                                    slider, new Label("Max Performance"), maxField, stateSwitch, colorPicker);
         controlPane.setPadding(new Insets(0, 50, 0, 50));
         controlPane.setSpacing(10);
 
@@ -56,11 +57,14 @@ public class DemoPane extends BorderPane {
         slider.valueProperty().bindBidirectional(pm.pmValueProperty());
         colorPicker.valueProperty().bindBidirectional(pm.baseColorProperty());
         stateSwitch.selectedProperty().bindBidirectional(pm.runningProperty());
+        maxField.textProperty().bindBidirectional(pm.maxProperty(), new NumberStringConverter());
 
         //bindings Controls to pm
         tachometer.valueProperty().bindBidirectional(pm.pmValueProperty());
         tachometer.baseColorProperty().bindBidirectional(pm.baseColorProperty());
         tachometer.onProperty().bindBidirectional(pm.runningProperty());
+        tachometer.maxPerformanceProperty().bindBidirectional(pm.maxProperty());
+        tachometer.minPerformanceProperty().bind(pm.minProperty());
     }
 
 }

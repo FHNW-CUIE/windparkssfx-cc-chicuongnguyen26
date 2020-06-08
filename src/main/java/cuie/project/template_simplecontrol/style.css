@@ -23,3 +23,14 @@
     -fx-arc-height: 15;
     -fx-arc-width : 15;
 }
+
+.tachometer .tick {
+    -fx-stroke: white;
+    -fx-stroke-width: 2;
+}
+
+.tachometer .tick-label {
+    -fx-font-family: 'Lato Light';
+    -fx-font-size: 12;
+    -fx-fill: white;
+}
