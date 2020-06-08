@@ -71,7 +71,6 @@ public class Tachometer extends Region {
     private Group       ticks;
     private List<Text>  tickLabels;
     private Arc         dial;
-    private Circle      pointer;
 
     private ChangeListener<Number> angleListener;
     private ChangeListener<Number> minMaxListener;
@@ -80,12 +79,13 @@ public class Tachometer extends Region {
     private Circle      backgroundCircle;
     private Text        display;
     private Polygon     propeller;
+    private Region      pivotPoint;
 
     //Switch
     private Circle      thumb;
     private Rectangle   frame;
 
-    // ToDo: ersetzen durch alle notwendigen Properties der CustomControl
+    // all properties
     private final DoubleProperty    value           = new SimpleDoubleProperty();
     private final BooleanProperty   on              = new SimpleBooleanProperty();
     private final DoubleProperty    minValue        = new SimpleDoubleProperty(0);
@@ -123,7 +123,7 @@ public class Tachometer extends Region {
         }
     };
 
-    // ToDo: alle Animationen und Timelines deklarieren
+    // animation & timelines
     private final Timeline timeline = new Timeline();
 
 
@@ -164,16 +164,13 @@ public class Tachometer extends Region {
         int width = 0;
         double radius = center - width;
 
-        dial = new Arc(center, center, radius, radius, 90.0, 0.0);
+        dial = new Arc(center, center, radius, radius, 270.0, 0.0);
         dial.getStyleClass().add("dial");
         dial.setType(ArcType.OPEN);
 
         ticks = createTicks(center, center, radius - width-10, 30,  0.0, 360.0,7, "tick");
 
         tickLabels = new ArrayList<>();
-
-        pointer = new Circle(150.0, 30.0, 1);
-        pointer.getStyleClass().add("pointer");
 
         int labelCount = 8;
         for (int i = 0; i < labelCount; i++) {
@@ -204,6 +201,9 @@ public class Tachometer extends Region {
                 170.0, 150.0 // Ecke rechts oben
         );
 
+        pivotPoint = new Region();
+        pivotPoint.setShape(propeller);
+
 
         thumb = new Circle(backgroundCircle.getCenterX()* 0.94, backgroundCircle.getCenterY() * 0.8,7);
         thumb.getStyleClass().add("thumb");
@@ -230,7 +230,7 @@ public class Tachometer extends Region {
 
     private void layoutParts() {
         //ToDo: alle Parts zur drawingPane hinzufügen
-        drawingPane.getChildren().addAll(dial, ticks, propeller, pointer, backgroundCircle, display, frame, thumb);
+        drawingPane.getChildren().addAll(dial, ticks, propeller, backgroundCircle, display, frame, thumb);
         drawingPane.getChildren().addAll(tickLabels);
 
         getChildren().add(drawingPane);
@@ -240,7 +240,7 @@ public class Tachometer extends Region {
         //ToDo: bei Bedarf ergänzen
         drawingPane.setOnMouseClicked(event -> setOn(!isOn()));
 
-        pointer.setOnMouseDragged(event -> {
+        propeller.setOnMouseDragged(event -> {
             double center = 300 * 0.5;
             setAnimated(false);
             setAngle(center);
@@ -332,9 +332,9 @@ public class Tachometer extends Region {
         //double center = propeller.getPoints().get(0);
         double center = ARTBOARD_WIDTH * 0.5;
         //Point2D propellerCenter = localToScreen(0.0, 100.0);
-        Point2D thumbCenter = pointOnCircle(center, center, center - 15, getAngle());
+        /*Point2D thumbCenter = pointOnCircle(center, center, center - 15, getAngle());
         pointer.setCenterX(thumbCenter.getX());
-        pointer.setCenterY(thumbCenter.getY());
+        pointer.setCenterY(thumbCenter.getY());*/
 
     }
 
