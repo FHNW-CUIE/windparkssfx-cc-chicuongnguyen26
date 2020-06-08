@@ -44,7 +44,15 @@ import javafx.util.Duration;
  */
 
 public class Tachometer extends Region {
+
     // wird gebraucht fuer StyleableProperties
+    private static final Color THUMB_ON  = Color.rgb( 62, 130, 247);
+    private static final Color THUMB_OFF = Color.rgb(250, 250, 250);
+    private static final Color FRAME_ON  = Color.rgb(162, 197, 255);
+    private static final Color FRAME_OFF = Color.rgb(153, 153, 153);
+    private static final Color PROPELLER_ON = Color.rgb(60, 152, 172);
+    private static final Color PROPELLER_OFF = Color.rgb(183, 193, 197);
+
     private static final StyleablePropertyFactory<Tachometer> FACTORY = new StyleablePropertyFactory<>(Region.getClassCssMetaData());
 
     @Override
@@ -125,6 +133,8 @@ public class Tachometer extends Region {
 
     // animation & timelines
     private final Timeline timeline = new Timeline();
+    private Transition onTransition;
+    private Transition offTransition;
 
 
     // fuer Resizing benoetigt
@@ -168,14 +178,14 @@ public class Tachometer extends Region {
         dial.getStyleClass().add("dial");
         dial.setType(ArcType.OPEN);
 
-        ticks = createTicks(center, center, radius - width-10, 30,  0.0, 360.0,7, "tick");
+        ticks = createTicks(center, center, radius - width-10, 30,  235.0, 250.0,7, "tick");
 
         tickLabels = new ArrayList<>();
 
         int labelCount = 8;
-        for (int i = 0; i < labelCount; i++) {
-            double r     = 95;
-            double nextAngle = i * 360.0 / labelCount;
+        for (int i = 0; i <= labelCount; i++) {
+            double r     = -105;
+            double nextAngle = (i * 250.0 + 420)/ labelCount;
 
             Point2D p         = pointOnCircle(center, center, r, nextAngle);
             Text    tickLabel = createCenteredText(p.getX(), p.getY(), "tick-label");
@@ -226,6 +236,42 @@ public class Tachometer extends Region {
 
     private void initializeAnimations(){
         //ToDo: alle deklarierten Animationen initialisieren
+        TranslateTransition onTranslation = new TranslateTransition(Duration.millis(500), thumb);
+        onTranslation.setFromX(0);
+        onTranslation.setToX(16);
+
+        FillTransition onFill = new FillTransition(Duration.millis(500), frame);
+        onFill.setFromValue(FRAME_OFF);
+        onFill.setToValue(FRAME_ON);
+
+        FillTransition onFillThumb = new FillTransition(Duration.millis(500), thumb);
+        onFillThumb.setFromValue(THUMB_OFF);
+        onFillThumb.setToValue(THUMB_ON);
+
+        FillTransition onFillPropeller = new FillTransition(Duration.millis(500), propeller);
+        onFillPropeller.setFromValue(PROPELLER_OFF);
+        onFillPropeller.setToValue(PROPELLER_ON);
+
+
+        onTransition = new ParallelTransition(onTranslation, onFill, onFillThumb, onFillPropeller);
+
+        TranslateTransition offTranslation = new TranslateTransition(Duration.millis(500), thumb);
+        offTranslation.setFromX(16);
+        offTranslation.setToX(0);
+
+        FillTransition offFill = new FillTransition(Duration.millis(500), frame);
+        offFill.setFromValue(FRAME_ON);
+        offFill.setToValue(FRAME_OFF);
+
+        FillTransition offFillThumb = new FillTransition(Duration.millis(500), thumb);
+        offFillThumb.setFromValue(THUMB_ON);
+        offFillThumb.setToValue(THUMB_OFF);
+
+        FillTransition offFillPropeller = new FillTransition(Duration.millis(500), propeller);
+        offFillPropeller.setFromValue(PROPELLER_ON);
+        offFillPropeller.setToValue(PROPELLER_OFF);
+
+        offTransition = new ParallelTransition(offTranslation, offFill, offFillThumb, offFillPropeller);
     }
 
     private void layoutParts() {
@@ -291,7 +337,7 @@ public class Tachometer extends Region {
 
     private void updateUI(){
         //ToDo : ergaenzen mit dem was bei einer Wertaenderung einer Status-Property im UI upgedated werden muss
-        if (isOn()) {
+  /*      if (isOn()) {
             thumb.setLayoutX(16);
             thumb.setFill(Paint.valueOf("#32CD32"));
             frame.setFill(Paint.valueOf("#BCEE68"));
@@ -300,6 +346,16 @@ public class Tachometer extends Region {
             thumb.setLayoutX(0);
             thumb.setFill(Paint.valueOf("#3E82F7"));
             frame.setFill(Paint.valueOf("#A2C5FF"));
+        }*/
+
+        onTransition.stop();
+        offTransition.stop();
+        if(isOn()){
+            onTransition.play();
+            //propeller.setFill(Paint.valueOf("#3C98AC"));
+        }else {
+            offTransition.play();
+            //propeller.setFill(Paint.valueOf("#B7C1C5"));
         }
     }
 
