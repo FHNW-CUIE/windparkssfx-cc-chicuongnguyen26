@@ -30,6 +30,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
+import javafx.scene.shape.Polygon;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
@@ -78,8 +79,9 @@ public class Tachometer extends Region {
     private Text        display;
     private Circle      thumb;
     private Rectangle   frame;
-    private Group      ticks;
+    private Group       ticks;
     private List<Text>  tickLabels;
+    private Polygon     propeller;
 
     // ToDo: ersetzen durch alle notwendigen Properties der CustomControl
     private final DoubleProperty value = new SimpleDoubleProperty();
@@ -163,7 +165,15 @@ public class Tachometer extends Region {
         frame.getStyleClass().add("frame");
         frame.setMouseTransparent(true);
 
-        ticks = createTicks(center, center, 74, 90, 0, 360, 6, "tick");
+        propeller = new Polygon();
+        propeller.getStyleClass().add("propeller");
+        propeller.getPoints().setAll(
+                ARTBOARD_HEIGHT/2, 30.0, //Spitze oben
+                190.0, 200.0, // Spitze links
+                310.0, 200.0 // Spitze rechts
+        );
+
+        ticks = createTicks(center, center, 225, 90, 0, 360, 6, "tick");
 
         tickLabels = new ArrayList<>();
 
@@ -172,7 +182,7 @@ public class Tachometer extends Region {
             double r = 95;
             double angle = i * 360 / labelCount;
 
-            Point2D p   = pointOnCircle(center, center, r, angle);
+            Point2D p   = pointOnCircle(center, center, 235, angle);
             Text tickLabel = createCenteredText(p.getX(), p.getY(), "tick-label");
             tickLabels.add(tickLabel);
         }
@@ -220,7 +230,7 @@ public class Tachometer extends Region {
 
     private void layoutParts() {
         //ToDo: alle Parts zur drawingPane hinzufügen
-        drawingPane.getChildren().addAll(backgroundCircle, display, frame, thumb, ticks);
+        drawingPane.getChildren().addAll(propeller, backgroundCircle, display, frame, thumb, ticks);
         drawingPane.getChildren().addAll(tickLabels);
 
         getChildren().add(drawingPane);
