@@ -1,7 +1,12 @@
 package cuie.project.template_simplecontrol;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+
+
+import eu.hansolo.medusa.GaugeBuilder;
+
 
 import javafx.animation.*;
 import javafx.beans.property.BooleanProperty;
@@ -10,6 +15,7 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.css.CssMetaData;
 import javafx.css.SimpleStyleableObjectProperty;
 import javafx.css.Styleable;
@@ -17,35 +23,44 @@ import javafx.css.StyleableObjectProperty;
 import javafx.css.StyleablePropertyFactory;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
+import javafx.geometry.Pos;
 import javafx.geometry.VPos;
 import javafx.scene.Group;
+import javafx.scene.control.Button;
 import javafx.scene.effect.BlurType;
 import javafx.scene.effect.DropShadow;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
-import javafx.scene.paint.Paint;
-import javafx.scene.shape.Circle;
-import javafx.scene.shape.Line;
-import javafx.scene.shape.Rectangle;
+import javafx.scene.shape.*;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.scene.text.TextBoundsType;
 import javafx.util.Duration;
-import org.w3c.dom.css.Rect;
+import eu.hansolo.medusa.Gauge;
+
 
 /**
  *
  * The tachometer displays the performance of the windmill
- * through the propeller and the value in the middle
+ * through the pointer and the value in the middle
  * in addition you can see and change the state of the windmill with the radionbutton in the middle
  *
  * @author Cristine Paduga / Chi Cuong Nguyen
  */
 
 public class Tachometer extends Region {
+
     // wird gebraucht fuer StyleableProperties
+    private static final Color THUMB_ON  = Color.rgb( 62, 130, 247);
+    private static final Color THUMB_OFF = Color.rgb(250, 250, 250);
+    private static final Color FRAME_ON  = Color.rgb(162, 197, 255);
+    private static final Color FRAME_OFF = Color.rgb(153, 153, 153);
+    private static final Color PROPELLER_ON = Color.rgb(60, 152, 172);
+    private static final Color PROPELLER_OFF = Color.rgb(183, 193, 197);
+
     private static final StyleablePropertyFactory<Tachometer> FACTORY = new StyleablePropertyFactory<>(Region.getClassCssMetaData());
     //Animation switch
     private static final Color THUMB_ON  = Color.rgb( 62, 130, 247);
@@ -60,27 +75,38 @@ public class Tachometer extends Region {
 
     private static final Locale CH = new Locale("de", "CH");
 
-    private static final double ARTBOARD_WIDTH  = 100;  // ToDo: Breite der "Zeichnung" aus dem Grafik-Tool übernehmen
-    private static final double ARTBOARD_HEIGHT = 100;  // ToDo: Anpassen an die Breite der Zeichnung
+    private static final double ARTBOARD_WIDTH  = 300;  // ToDo: Breite der "Zeichnung" aus dem Grafik-Tool übernehmen
+    private static final double ARTBOARD_HEIGHT = 200;  // ToDo: Anpassen an die Breite der Zeichnung
 
     private static final double ASPECT_RATIO = ARTBOARD_WIDTH / ARTBOARD_HEIGHT;
 
-    private static final double MINIMUM_WIDTH  = 25;    // ToDo: Anpassen
+    private static final double MINIMUM_WIDTH  = 25;    //
     private static final double MINIMUM_HEIGHT = MINIMUM_WIDTH / ASPECT_RATIO;
 
-    private static final double MAXIMUM_WIDTH = 800;    // ToDo: Anpassen
+    private static final double MAXIMUM_WIDTH = 800;    //
 
-    // ToDo: diese Parts durch alle notwendigen Parts der gewünschten CustomControl ersetzen
+    //dial tachometer
+    private Gauge   gauge;
+    private Button  button;
+
+    //head windmill
     private Circle      backgroundCircle;
     private Text        display;
+    private Polygon     propeller;
+    private Rectangle   pillar;
+
+    //Switch
     private Circle      thumb;
     private Rectangle   frame;
 
-    // ToDo: ersetzen durch alle notwendigen Properties der CustomControl
-    private final DoubleProperty value = new SimpleDoubleProperty();
-    private final BooleanProperty on    = new SimpleBooleanProperty();
+    // all properties
+    private final DoubleProperty    value           = new SimpleDoubleProperty();
+    private final BooleanProperty   on              = new SimpleBooleanProperty();
+    private final DoubleProperty    minValue        = new SimpleDoubleProperty(0);
+    private final DoubleProperty    maxValue        = new SimpleDoubleProperty(1000);
+    private final BooleanProperty   animated        = new SimpleBooleanProperty(true);
 
-    // ToDo: ergänzen mit allen CSS stylable properties
+
     private static final CssMetaData<Tachometer, Color> BASE_COLOR_META_DATA = FACTORY.createColorCssMetaData("-base-color", s -> s.baseColor);
 
     private final StyleableObjectProperty<Color> baseColor = new SimpleStyleableObjectProperty<Color>(BASE_COLOR_META_DATA) {
@@ -91,8 +117,6 @@ public class Tachometer extends Region {
         }
     };
 
-    // ToDo: Loeschen falls keine getaktete Animation benoetigt wird
-    private final BooleanProperty          blinking = new SimpleBooleanProperty(false);
     private final ObjectProperty<Duration> pulse    = new SimpleObjectProperty<>(Duration.seconds(1.0));
 
     // all animations
@@ -111,12 +135,11 @@ public class Tachometer extends Region {
         }
     };
 
-    // ToDo: alle Animationen und Timelines deklarieren
+    // animation & timelines
+    private Transition onTransition;
+    private Transition offTransition;
 
-    //private final Timeline timeline = new Timeline();
-
-
-    // fuer Resizing benoetigt
+    // resizing
     private Pane drawingPane;
 
     public Tachometer() {
@@ -133,28 +156,62 @@ public class Tachometer extends Region {
     private void initializeSelf() {
         loadFonts("/fonts/Lato/Lato-Lig.ttf", "/fonts/Lato/Lato-Reg.ttf");
         addStylesheetFiles("style.css");
-
         getStyleClass().add("tachometer");
+
     }
 
     private void initializeParts() {
-        //ToDo: alle deklarierten Parts initialisieren
-        double center = ARTBOARD_WIDTH * 0.5;
+        gauge = GaugeBuilder.create()
+                            .skinType(Gauge.SkinType.GAUGE)
+                            .borderWidth(3.0)
+                            .startAngle(290)
+                            .angleRange(220)
+                            .customTickLabels("0", "10000", "20000", "30000", "40000")
+                            .customTickLabelFontSize(5)
+                            .minorTickMarksVisible(true)
+                            .needleColor(Color.rgb(70, 130,180))
+                            .needleSize(Gauge.NeedleSize.THIN)
+                            .prefSize(300, 300)
+                            .minValue(0)
+                            .maxValue(40000)
+                            .valueVisible(false)
+                            .build();
 
-        backgroundCircle = new Circle(center, center, center);
+        button = new Button();
+        button.setOnMousePressed(event -> gauge.setValue(value.doubleValue() * gauge.getRange() + gauge.getMinValue()));
+
+        backgroundCircle = new Circle(150, 140, 35);
         backgroundCircle.getStyleClass().add("background-circle");
 
         display = createCenteredText("display");
 
-        thumb = new Circle(12,13,10);
+        propeller = new Polygon();
+        propeller.getStyleClass().add("propeller");
+        propeller.getPoints().setAll(
+                150.0, 20.0, //Spitze oben
+                130.0, 129.9, // Ecke links oben
+                40.1, 205.0, // Spitze links
+                150.0, 149.9, // Mitte
+                259.9, 205.0, // Spitze rechts
+                170.0, 129.9 // Ecke rechts oben
+        );
+
+        thumb = new Circle(backgroundCircle.getCenterX()* 0.94, backgroundCircle.getCenterY() * 0.867,7);
         thumb.getStyleClass().add("thumb");
         thumb.setStrokeWidth(0);
         thumb.setEffect(new DropShadow(BlurType.GAUSSIAN, Color.rgb(0,0,0,0.3),4,
                 0,0,1));
 
-        frame = new Rectangle(5.0, 5.0, ARTBOARD_WIDTH - 70.0, ARTBOARD_HEIGHT -85.0);
+        frame = new Rectangle(backgroundCircle.getCenterX() * 0.92 , backgroundCircle.getCenterY() * 0.83, 25, 10);
         frame.getStyleClass().add("frame");
         frame.setMouseTransparent(true);
+
+        pillar = new Rectangle();
+        pillar.getStyleClass().add("pillar");
+        pillar.setX(130);
+        pillar.setY(150);
+        pillar.setWidth(40);
+        pillar.setHeight(57);
     }
 
     private void initializeDrawingPane() {
@@ -179,7 +236,14 @@ public class Tachometer extends Region {
         onFillThumb.setFromValue(THUMB_OFF);
         onFillThumb.setToValue(THUMB_ON);
 
-        onTransition = new ParallelTransition(onTranslation, onFill, onFillThumb);
+
+        FillTransition onFillPropeller = new FillTransition(Duration.millis(500), propeller);
+        onFillPropeller.setFromValue(PROPELLER_OFF);
+        onFillPropeller.setToValue(PROPELLER_ON);
+
+
+        onTransition = new ParallelTransition(onTranslation, onFill, onFillThumb, onFillPropeller);
+
 
         TranslateTransition offTranslation = new TranslateTransition(Duration.millis(500), thumb);
         offTranslation.setFromX(16);
@@ -193,49 +257,37 @@ public class Tachometer extends Region {
         offFillThumb.setFromValue(THUMB_ON);
         offFillThumb.setToValue(THUMB_OFF);
 
-        offTransition = new ParallelTransition(offTranslation, offFill, offFillThumb);
+
+        FillTransition offFillPropeller = new FillTransition(Duration.millis(500), propeller);
+        offFillPropeller.setFromValue(PROPELLER_ON);
+        offFillPropeller.setToValue(PROPELLER_OFF);
+
+        offTransition = new ParallelTransition(offTranslation, offFill, offFillThumb, offFillPropeller);
+
+
     }
 
     private void layoutParts() {
-        //ToDo: alle Parts zur drawingPane hinzufügen
-        drawingPane.getChildren().addAll(backgroundCircle, display, frame, thumb);
-
+        drawingPane.getChildren().addAll(pillar, propeller, gauge, backgroundCircle, display, frame, thumb);
         getChildren().add(drawingPane);
     }
 
     private void setupEventHandlers() {
-        //ToDo: bei Bedarf ergänzen
-        drawingPane.setOnMouseClicked(event -> setOn(!isOn()));
+        thumb.setOnMouseClicked(event -> setOn(!isOn()));
     }
 
     private void setupValueChangeListeners() {
-        //ToDo: durch die Listener auf die Properties des Custom Controls ersetzen
-        valueProperty().addListener((observable, oldValue, newValue) -> updateUI());
 
-        // fuer die getaktete Animation
-        blinking.addListener((observable, oldValue, newValue) -> startClockedAnimation(newValue));
-
+        valueProperty().addListener((observable, oldValue, newValue) -> rotateProperty());
         onProperty().addListener((observable, oldValue, newValue) -> updateUI());
 
     }
 
     private void setupBindings() {
-        //ToDo: dieses Binding ersetzen
-        display.textProperty().bind(valueProperty().asString(CH, "%.2f"));
+        display.textProperty().bind(valueProperty().asString(CH, "%.2f" + " kW"));
     }
 
     private void updateUI(){
-        //ToDo : ergaenzen mit dem was bei einer Wertaenderung einer Status-Property im UI upgedated werden muss
-        /*if (isOn()) {
-            thumb.setLayoutX(16);
-            thumb.setFill(Paint.valueOf("#32CD32"));
-            frame.setFill(Paint.valueOf("#BCEE68"));
-        }
-        else {
-            thumb.setLayoutX(0);
-            thumb.setFill(Paint.valueOf("#3E82F7"));
-            frame.setFill(Paint.valueOf("#A2C5FF"));
-        }*/
         onTransition.stop();
         offTransition.stop();
         if(isOn()){
@@ -264,7 +316,6 @@ public class Tachometer extends Region {
         resize();
     }
 
-    //ToDo: ueberpruefen ob dieser Resizing-Ansatz anwendbar ist.
     private void resize() {
         Insets padding         = getPadding();
         double availableWidth  = getWidth() - padding.getLeft() - padding.getRight();
@@ -275,7 +326,6 @@ public class Tachometer extends Region {
         double scalingFactor = width / ARTBOARD_WIDTH;
 
         if (availableWidth > 0 && availableHeight > 0) {
-            //ToDo: ueberpruefen ob die drawingPane immer zentriert werden soll (eventuell ist zum Beispiel linksbuendig angemessener)
             relocateDrawingPaneCentered();
             drawingPane.setScaleX(scalingFactor);
             drawingPane.setScaleY(scalingFactor);
@@ -302,8 +352,6 @@ public class Tachometer extends Region {
     }
 
     // Sammlung nuetzlicher Funktionen
-
-    //ToDo: diese Funktionen anschauen und für die Umsetzung des CustomControls benutzen
 
     private void loadFonts(String... font){
         for(String f : font){
@@ -442,7 +490,7 @@ public class Tachometer extends Region {
      * @return Text
      */
     private Text createCenteredText(String styleClass) {
-        return createCenteredText(ARTBOARD_WIDTH * 0.5, ARTBOARD_HEIGHT * 0.5, styleClass);
+        return createCenteredText(backgroundCircle.getCenterX() , backgroundCircle.getCenterY(), styleClass);
     }
 
     /**
@@ -543,9 +591,7 @@ public class Tachometer extends Region {
         return ARTBOARD_HEIGHT + verticalPadding;
     }
 
-    // alle getter und setter  (generiert via "Code -> Generate... -> Getter and Setter)
-
-    // ToDo: ersetzen durch die Getter und Setter Ihres CustomControls
+    // getter & setters
     public double getValue() {
         return value.get();
     }
@@ -570,18 +616,6 @@ public class Tachometer extends Region {
         this.baseColor.set(baseColor);
     }
 
-    public boolean isBlinking() {
-        return blinking.get();
-    }
-
-    public BooleanProperty blinkingProperty() {
-        return blinking;
-    }
-
-    public void setBlinking(boolean blinking) {
-        this.blinking.set(blinking);
-    }
-
     public Duration getPulse() {
         return pulse.get();
     }
@@ -604,5 +638,57 @@ public class Tachometer extends Region {
 
     public void setOn(boolean on) {
         this.on.set(on);
+    }
+
+    public double getMinValue() {
+        return minValue.get();
+    }
+
+    public DoubleProperty minValueProperty() {
+        return minValue;
+    }
+
+    public void setMinValue(double minValue) {
+        this.minValue.set(minValue);
+    }
+
+    public double getMaxValue() {
+        return maxValue.get();
+    }
+
+    public DoubleProperty maxValueProperty() {
+        return maxValue;
+    }
+
+    public void setMaxValue(double maxValue) {
+        this.maxValue.set(maxValue);
+    }
+
+    public boolean isAnimated() {
+        return animated.get();
+    }
+
+    public BooleanProperty animatedProperty() {
+        return animated;
+    }
+
+    public void setAnimated(boolean animated) {
+        this.animated.set(animated);
+    }
+
+    public Polygon getPropeller() {
+        return propeller;
+    }
+
+    public void setPropeller(Polygon propeller) {
+        this.propeller = propeller;
+    }
+
+    public Gauge getGauge() {
+        return gauge;
+    }
+
+    public void setGauge(Gauge gauge) {
+        this.gauge = gauge;
     }
 }

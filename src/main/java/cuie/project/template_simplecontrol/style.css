@@ -1,17 +1,21 @@
 .tachometer {
     -fx-padding:          5;
-    -fx-background-color: rgb(12, 12, 12);
+    -fx-background-color: #EDEDED;
     -base-color:          rgb(2, 138, 204);
 }
 
 .tachometer .background-circle {
-    -fx-fill: -base-color;
+    -fx-fill: #B7C1C5;
+}
+
+.tachometer .propeller{
+    -fx-fill: #3C98AC;
 }
 
 .tachometer .display {
     -fx-font-family: 'Lato Light';
-    -fx-font-size:   24;
-    -fx-fill:        derive(-base-color, 90%);
+    -fx-font-size:   11;
+    -fx-fill:        black;
 }
 
 .tachometer .thumb {
@@ -22,4 +26,8 @@
     -fx-fill      : #A2C5FF;
     -fx-arc-height: 15;
     -fx-arc-width : 15;
+}
+
+.tachometer .pillar {
+    -fx-fill      : #B7C1C5;
 }

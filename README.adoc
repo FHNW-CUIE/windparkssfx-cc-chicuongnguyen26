@@ -1,8 +1,8 @@
-== CUIE Abschlussprojekt
+== CUIE Windpark Gauge
 
 === Bearbeitet von
 
-* _Vorname Nachname_
+* Cristine Paduga, Chi Cuong Nguyen
 
 === Integriert in die OOP2-Projekte von
 
