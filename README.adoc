@@ -2,7 +2,7 @@
 
 === Bearbeitet von
 
-* _Cristine Paduga, Chi Cuong Nguyen
+* Cristine Paduga, Chi Cuong Nguyen
 
 === Integriert in die OOP2-Projekte von
 
