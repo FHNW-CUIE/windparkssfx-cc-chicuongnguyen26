@@ -4,7 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+
 import eu.hansolo.medusa.GaugeBuilder;
+
+
 import javafx.animation.*;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
@@ -59,6 +62,11 @@ public class Tachometer extends Region {
     private static final Color PROPELLER_OFF = Color.rgb(183, 193, 197);
 
     private static final StyleablePropertyFactory<Tachometer> FACTORY = new StyleablePropertyFactory<>(Region.getClassCssMetaData());
+    //Animation switch
+    private static final Color THUMB_ON  = Color.rgb( 62, 130, 247);
+    private static final Color THUMB_OFF = Color.rgb(250, 250, 250);
+    private static final Color FRAME_ON  = Color.rgb(162, 197, 255);
+    private static final Color FRAME_OFF = Color.rgb(153, 153, 153);
 
     @Override
     public List<CssMetaData<? extends Styleable, ?>> getCssMetaData() {
@@ -110,6 +118,10 @@ public class Tachometer extends Region {
     };
 
     private final ObjectProperty<Duration> pulse    = new SimpleObjectProperty<>(Duration.seconds(1.0));
+
+    // all animations
+    private Transition onTransition;
+    private Transition offTransition;
 
     private final AnimationTimer timer = new AnimationTimer() {
         private long lastTimerCall;
@@ -224,12 +236,14 @@ public class Tachometer extends Region {
         onFillThumb.setFromValue(THUMB_OFF);
         onFillThumb.setToValue(THUMB_ON);
 
+
         FillTransition onFillPropeller = new FillTransition(Duration.millis(500), propeller);
         onFillPropeller.setFromValue(PROPELLER_OFF);
         onFillPropeller.setToValue(PROPELLER_ON);
 
 
         onTransition = new ParallelTransition(onTranslation, onFill, onFillThumb, onFillPropeller);
+
 
         TranslateTransition offTranslation = new TranslateTransition(Duration.millis(500), thumb);
         offTranslation.setFromX(16);
@@ -243,11 +257,14 @@ public class Tachometer extends Region {
         offFillThumb.setFromValue(THUMB_ON);
         offFillThumb.setToValue(THUMB_OFF);
 
+
         FillTransition offFillPropeller = new FillTransition(Duration.millis(500), propeller);
         offFillPropeller.setFromValue(PROPELLER_ON);
         offFillPropeller.setToValue(PROPELLER_OFF);
 
         offTransition = new ParallelTransition(offTranslation, offFill, offFillThumb, offFillPropeller);
+
+
     }
 
     private void layoutParts() {
