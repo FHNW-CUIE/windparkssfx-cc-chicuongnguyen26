@@ -62,11 +62,7 @@ public class Tachometer extends Region {
     private static final Color PROPELLER_OFF = Color.rgb(183, 193, 197);
 
     private static final StyleablePropertyFactory<Tachometer> FACTORY = new StyleablePropertyFactory<>(Region.getClassCssMetaData());
-    //Animation switch
-    private static final Color THUMB_ON  = Color.rgb( 62, 130, 247);
-    private static final Color THUMB_OFF = Color.rgb(250, 250, 250);
-    private static final Color FRAME_ON  = Color.rgb(162, 197, 255);
-    private static final Color FRAME_OFF = Color.rgb(153, 153, 153);
+
 
     @Override
     public List<CssMetaData<? extends Styleable, ?>> getCssMetaData() {
@@ -134,10 +130,6 @@ public class Tachometer extends Region {
             }
         }
     };
-
-    // animation & timelines
-    private Transition onTransition;
-    private Transition offTransition;
 
     // resizing
     private Pane drawingPane;
