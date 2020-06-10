@@ -14,7 +14,7 @@ public class DemoStarter extends Application {
 
         Scene scene = new Scene(rootPanel);
 
-        primaryStage.setTitle("Simple Control Demo");
+        primaryStage.setTitle("Windpark Gauge");
         primaryStage.setScene(scene);
 
         primaryStage.show();

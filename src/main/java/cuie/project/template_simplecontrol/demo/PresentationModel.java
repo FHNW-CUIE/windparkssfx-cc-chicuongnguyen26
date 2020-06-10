@@ -8,7 +8,7 @@ public class PresentationModel {
     private final ObjectProperty<Color> baseColor       = new SimpleObjectProperty<>();
     private final BooleanProperty       running         = new SimpleBooleanProperty(true);
     private final DoubleProperty        min             = new SimpleDoubleProperty(0);
-    private final DoubleProperty        max             = new SimpleDoubleProperty(100.0);
+    private final DoubleProperty        max             = new SimpleDoubleProperty(40000);
     private final BooleanProperty       animated        = new SimpleBooleanProperty(true);
 
     public double getPmValue() {

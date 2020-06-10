@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import eu.hansolo.medusa.GaugeBuilder;
 import javafx.animation.*;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
@@ -22,25 +23,26 @@ import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.geometry.VPos;
 import javafx.scene.Group;
+import javafx.scene.control.Button;
 import javafx.scene.effect.BlurType;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
-import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
-import javafx.scene.paint.Paint;
 import javafx.scene.shape.*;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.scene.text.TextBoundsType;
 import javafx.util.Duration;
+import eu.hansolo.medusa.Gauge;
+
 
 /**
  *
  * The tachometer displays the performance of the windmill
- * through the propeller and the value in the middle
+ * through the pointer and the value in the middle
  * in addition you can see and change the state of the windmill with the radionbutton in the middle
  *
  * @author Cristine Paduga / Chi Cuong Nguyen
@@ -66,33 +68,23 @@ public class Tachometer extends Region {
     private static final Locale CH = new Locale("de", "CH");
 
     private static final double ARTBOARD_WIDTH  = 300;  // ToDo: Breite der "Zeichnung" aus dem Grafik-Tool übernehmen
-    private static final double ARTBOARD_HEIGHT = 300;  // ToDo: Anpassen an die Breite der Zeichnung
+    private static final double ARTBOARD_HEIGHT = 200;  // ToDo: Anpassen an die Breite der Zeichnung
 
     private static final double ASPECT_RATIO = ARTBOARD_WIDTH / ARTBOARD_HEIGHT;
 
-    private static final double MINIMUM_WIDTH  = 25;    // ToDo: Anpassen
+    private static final double MINIMUM_WIDTH  = 25;    //
     private static final double MINIMUM_HEIGHT = MINIMUM_WIDTH / ASPECT_RATIO;
 
-    private static final double MAXIMUM_WIDTH = 800;    // ToDo: Anpassen
-
-    private static final Duration ANIMATION_DURATION = Duration.millis(400);
-
-    // ToDo: diese Parts durch alle notwendigen Parts der gewünschten CustomControl ersetzen
-    private BorderPane rootPropeller;
+    private static final double MAXIMUM_WIDTH = 800;    //
 
     //dial tachometer
-    private Group       ticks;
-    private List<Text>  tickLabels;
-    private Arc         dial;
-
-    private ChangeListener<Number> angleListener;
-    private ChangeListener<Number> minMaxListener;
+    private Gauge   gauge;
+    private Button  button;
 
     //head windmill
     private Circle      backgroundCircle;
     private Text        display;
     private Polygon     propeller;
-    private Region      pivotPoint;
 
     //Switch
     private Circle      thumb;
@@ -104,12 +96,8 @@ public class Tachometer extends Region {
     private final DoubleProperty    minValue        = new SimpleDoubleProperty(0);
     private final DoubleProperty    maxValue        = new SimpleDoubleProperty(1000);
     private final BooleanProperty   animated        = new SimpleBooleanProperty(true);
-    private final DoubleProperty    animatedValue   = new SimpleDoubleProperty();
-    private final DoubleProperty    angle           = new SimpleDoubleProperty();
-    private final DoubleProperty    percentage      = new SimpleDoubleProperty();
 
 
-    // ToDo: ergänzen mit allen CSS stylable properties
     private static final CssMetaData<Tachometer, Color> BASE_COLOR_META_DATA = FACTORY.createColorCssMetaData("-base-color", s -> s.baseColor);
 
     private final StyleableObjectProperty<Color> baseColor = new SimpleStyleableObjectProperty<Color>(BASE_COLOR_META_DATA) {
@@ -120,8 +108,6 @@ public class Tachometer extends Region {
         }
     };
 
-    // ToDo: Loeschen falls keine getaktete Animation benoetigt wird
-    private final BooleanProperty          blinking = new SimpleBooleanProperty(false);
     private final ObjectProperty<Duration> pulse    = new SimpleObjectProperty<>(Duration.seconds(1.0));
 
     private final AnimationTimer timer = new AnimationTimer() {
@@ -137,12 +123,10 @@ public class Tachometer extends Region {
     };
 
     // animation & timelines
-    private final Timeline timeline = new Timeline();
     private Transition onTransition;
     private Transition offTransition;
 
-
-    // fuer Resizing benoetigt
+    // resizing
     private Pane drawingPane;
 
     public Tachometer() {
@@ -156,54 +140,34 @@ public class Tachometer extends Region {
         setupBindings();
     }
 
-    void setAngle(double cx, double cy, double x, double y) {
-        double angle = angle(cx, cy, x, y);
-        double percentage = angleToPercentage(angle);
-        double value = percentageToValue(percentage, getMinValue(), getMaxValue());
-        setValue(value);
-    }
-
     private void initializeSelf() {
         loadFonts("/fonts/Lato/Lato-Lig.ttf", "/fonts/Lato/Lato-Reg.ttf");
         addStylesheetFiles("style.css");
-
         getStyleClass().add("tachometer");
 
-        angleListener = (observable, oldValue, newValue) -> relocatePropeller();
-        minMaxListener = (observable, oldValue, newValue) -> updateTickLabels();
     }
 
     private void initializeParts() {
-        //ToDo: alle deklarierten Parts initialisieren
-        double center = ARTBOARD_WIDTH * 0.5;
-        int width = 0;
-        double radius = center - width;
+        gauge = GaugeBuilder.create()
+                            .skinType(Gauge.SkinType.GAUGE)
+                            .borderWidth(3.0)
+                            .startAngle(290)
+                            .angleRange(220)
+                            .customTickLabels("0", "10000", "20000", "30000", "40000")
+                            .customTickLabelFontSize(5)
+                            .minorTickMarksVisible(true)
+                            .needleColor(Color.rgb(70, 130,180))
+                            .needleSize(Gauge.NeedleSize.THIN)
+                            .prefSize(300, 300)
+                            .minValue(0)
+                            .maxValue(40000)
+                            .valueVisible(false)
+                            .build();
 
-        rootPropeller = new BorderPane();
-        rootPropeller.getStyleClass().add("root-propeller");
-        rootPropeller.setCenter(propeller);
+        button = new Button();
+        button.setOnMousePressed(event -> gauge.setValue(value.doubleValue() * gauge.getRange() + gauge.getMinValue()));
 
-        dial = new Arc(center, center, radius, radius, 270.0, 0.0);
-        dial.getStyleClass().add("dial");
-        dial.setType(ArcType.OPEN);
-
-        ticks = createTicks(center, center, radius - width-10, 30,  235.0, 250.0,7, "tick");
-
-        tickLabels = new ArrayList<>();
-
-        int labelCount = 8;
-        for (int i = 0; i <= labelCount; i++) {
-            double r     = -105;
-            double nextAngle = (i * 250.0 + 420)/ labelCount;
-
-            Point2D p         = pointOnCircle(center, center, r, nextAngle);
-            Text    tickLabel = createCenteredText(p.getX(), p.getY(), "tick-label");
-
-            tickLabels.add(tickLabel);
-        }
-        updateTickLabels();
-
-        backgroundCircle = new Circle(150, 175, 50);
+        backgroundCircle = new Circle(150, 140, 35);
         backgroundCircle.getStyleClass().add("background-circle");
 
         display = createCenteredText("display");
@@ -211,26 +175,21 @@ public class Tachometer extends Region {
         propeller = new Polygon();
         propeller.getStyleClass().add("propeller");
         propeller.getPoints().setAll(
-                150.0, 30.0, //Spitze oben
-                130.0, 150.0, // Ecke links oben
-                60.0, 240.0, // Spitze links
-                140.0, 190.0, // Linie links
-                160.0, 190.0, // Linie rechts
-                240.0, 240.0, // Spitze rechts
-                170.0, 150.0 // Ecke rechts oben
+                150.0, 20.0, //Spitze oben
+                130.0, 129.9, // Ecke links oben
+                40.1, 205.0, // Spitze links
+                150.0, 149.9, // Mitte
+                259.9, 205.0, // Spitze rechts
+                170.0, 129.9 // Ecke rechts oben
         );
 
-        pivotPoint = new Region();
-        pivotPoint.setShape(propeller);
-
-
-        thumb = new Circle(backgroundCircle.getCenterX()* 0.94, backgroundCircle.getCenterY() * 0.8,7);
+        thumb = new Circle(backgroundCircle.getCenterX()* 0.94, backgroundCircle.getCenterY() * 0.867,7);
         thumb.getStyleClass().add("thumb");
         thumb.setStrokeWidth(0);
         thumb.setEffect(new DropShadow(BlurType.GAUSSIAN, Color.rgb(0,0,0,0.3),4,
                 0,0,1));
 
-        frame = new Rectangle(backgroundCircle.getCenterX() * 0.92 , backgroundCircle.getCenterY() * 0.77, 25, 10);
+        frame = new Rectangle(backgroundCircle.getCenterX() * 0.92 , backgroundCircle.getCenterY() * 0.83, 25, 10);
         frame.getStyleClass().add("frame");
         frame.setMouseTransparent(true);
     }
@@ -284,133 +243,34 @@ public class Tachometer extends Region {
     }
 
     private void layoutParts() {
-        //ToDo: alle Parts zur drawingPane hinzufügen
-        rootPropeller.getChildren().add(propeller);
-        drawingPane.getChildren().addAll(dial, ticks, rootPropeller, backgroundCircle, display, frame, thumb);
-        drawingPane.getChildren().addAll(tickLabels);
-
-
+        drawingPane.getChildren().addAll(gauge, propeller, backgroundCircle, display, frame, thumb);
         getChildren().add(drawingPane);
     }
 
     private void setupEventHandlers() {
-        //ToDo: bei Bedarf ergänzen
         thumb.setOnMouseClicked(event -> setOn(!isOn()));
-
-
-        propeller.setOnMouseDragged(event -> {
-            double center = 300 * 0.5;
-            setAnimated(false);
-            setAngle(center);
-            setAnimated(true);
-        });
-
     }
 
     private void setupValueChangeListeners() {
-        //ToDo: durch die Listener auf die Properties des Custom Controls ersetzen
-        angleProperty().addListener(angleListener);
-        minValueProperty().addListener(minMaxListener);
-        maxValueProperty().addListener(minMaxListener);
 
-        //valueProperty().addListener((observable, oldValue, newValue) -> updateUI());
-        //valueProperty().addListener((observable, oldValue, newValue) -> rotateProperty());
-        /*valueProperty().addListener((observable, oldValue, newValue) -> {
-            if (isAnimated()) {
-                timeline.stop();
-                timeline.getKeyFrames().setAll(new KeyFrame(ANIMATION_DURATION,
-                        new KeyValue(animatedValueProperty(),
-                                newValue,
-                                Interpolator.EASE_BOTH)));
-
-                timeline.play();
-            } else {
-                setAnimatedValue(newValue.doubleValue());
-            }
-        });*/
-
-
-       /** animatedValueProperty().addListener((observable, oldValue, newValue) -> {
-            setPercentage(valueToPercentage(newValue.doubleValue(), getMinValue(), getMaxValue()));
-            setAngle(percentageToAngle(getPercentage()));
-        });*/
-
-        // fuer die getaktete Animation
-        blinking.addListener((observable, oldValue, newValue) -> startClockedAnimation(newValue));
-
+        valueProperty().addListener((observable, oldValue, newValue) -> rotateProperty());
         onProperty().addListener((observable, oldValue, newValue) -> updateUI());
 
     }
 
     private void setupBindings() {
-        //ToDo: dieses Binding ersetzen
-        display.textProperty().bind(valueProperty().asString(CH, "%.2f"));
-        dial.lengthProperty().bind(angleProperty().multiply(-1.0));
-    }
-
-    private void rotatePropeller() {
+        display.textProperty().bind(valueProperty().asString(CH, "%.2f" + " kW"));
     }
 
     private void updateUI(){
-        //ToDo : ergaenzen mit dem was bei einer Wertaenderung einer Status-Property im UI upgedated werden muss
-  /*      if (isOn()) {
-            thumb.setLayoutX(16);
-            thumb.setFill(Paint.valueOf("#32CD32"));
-            frame.setFill(Paint.valueOf("#BCEE68"));
-        }
-        else {
-            thumb.setLayoutX(0);
-            thumb.setFill(Paint.valueOf("#3E82F7"));
-            frame.setFill(Paint.valueOf("#A2C5FF"));
-        }*/
-
         onTransition.stop();
         offTransition.stop();
         if(isOn()){
             onTransition.play();
-            //propeller.setFill(Paint.valueOf("#3C98AC"));
         }else {
             offTransition.play();
-            //propeller.setFill(Paint.valueOf("#B7C1C5"));
         }
     }
-
-
-    /*public void dispose() {
-        angleProperty().removeListener(angleListener);
-        minValueProperty().removeListener(minMaxListener);
-        maxValueProperty().removeListener(minMaxListener);
-
-        display.textProperty().unbind();
-        dial.lengthProperty().unbind();
-
-        propeller.setOnMouseDragged(null);
-
-        super.dispose();
-    }
-*/
-    private void updateTickLabels() {
-        int labelCount = tickLabels.size();
-        double step    = (getMaxValue() - getMinValue()) / labelCount;
-
-        for (int i = 0; i < labelCount; i++) {
-            Text tickLabel = tickLabels.get(i);
-            tickLabel.setText(String.format("%.1f", getMinValue() + (i * step)));
-        }
-    }
-
-    //todo: adapt to propeller
-    private void relocatePropeller() {
-        //double center = propeller.getPoints().get(0);
-        double center = ARTBOARD_WIDTH * 0.5;
-        //Point2D propellerCenter = localToScreen(0.0, 100.0);
-        /*Point2D thumbCenter = pointOnCircle(center, center, center - 15, getAngle());
-        pointer.setCenterX(thumbCenter.getX());
-        pointer.setCenterY(thumbCenter.getY());*/
-
-    }
-
-
 
     private void performPeriodicTask(){
         //ToDo: ergaenzen mit dem was bei der getakteten Animation gemacht werden muss
@@ -431,7 +291,6 @@ public class Tachometer extends Region {
         resize();
     }
 
-    //ToDo: ueberpruefen ob dieser Resizing-Ansatz anwendbar ist.
     private void resize() {
         Insets padding         = getPadding();
         double availableWidth  = getWidth() - padding.getLeft() - padding.getRight();
@@ -442,7 +301,6 @@ public class Tachometer extends Region {
         double scalingFactor = width / ARTBOARD_WIDTH;
 
         if (availableWidth > 0 && availableHeight > 0) {
-            //ToDo: ueberpruefen ob die drawingPane immer zentriert werden soll (eventuell ist zum Beispiel linksbuendig angemessener)
             relocateDrawingPaneCentered();
             drawingPane.setScaleX(scalingFactor);
             drawingPane.setScaleY(scalingFactor);
@@ -469,8 +327,6 @@ public class Tachometer extends Region {
     }
 
     // Sammlung nuetzlicher Funktionen
-
-    //ToDo: diese Funktionen anschauen und für die Umsetzung des CustomControls benutzen
 
     private void loadFonts(String... font){
         for(String f : font){
@@ -710,9 +566,7 @@ public class Tachometer extends Region {
         return ARTBOARD_HEIGHT + verticalPadding;
     }
 
-    // alle getter und setter  (generiert via "Code -> Generate... -> Getter and Setter)
-
-    // ToDo: ersetzen durch die Getter und Setter Ihres CustomControls
+    // getter & setters
     public double getValue() {
         return value.get();
     }
@@ -735,18 +589,6 @@ public class Tachometer extends Region {
 
     public void setBaseColor(Color baseColor) {
         this.baseColor.set(baseColor);
-    }
-
-    public boolean isBlinking() {
-        return blinking.get();
-    }
-
-    public BooleanProperty blinkingProperty() {
-        return blinking;
-    }
-
-    public void setBlinking(boolean blinking) {
-        this.blinking.set(blinking);
     }
 
     public Duration getPulse() {
@@ -809,39 +651,19 @@ public class Tachometer extends Region {
         this.animated.set(animated);
     }
 
-    public double getAnimatedValue() {
-        return animatedValue.get();
+    public Polygon getPropeller() {
+        return propeller;
     }
 
-    public DoubleProperty animatedValueProperty() {
-        return animatedValue;
+    public void setPropeller(Polygon propeller) {
+        this.propeller = propeller;
     }
 
-    public void setAnimatedValue(double animatedValue) {
-        this.animatedValue.set(animatedValue);
+    public Gauge getGauge() {
+        return gauge;
     }
 
-    public double getAngle() {
-        return angle.get();
-    }
-
-    public DoubleProperty angleProperty() {
-        return angle;
-    }
-
-    public void setAngle(double angle) {
-        this.angle.set(angle);
-    }
-
-    public double getPercentage() {
-        return percentage.get();
-    }
-
-    public DoubleProperty percentageProperty() {
-        return percentage;
-    }
-
-    public void setPercentage(double percentage) {
-        this.percentage.set(percentage);
+    public void setGauge(Gauge gauge) {
+        this.gauge = gauge;
     }
 }
