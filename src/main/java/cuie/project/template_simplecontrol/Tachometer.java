@@ -85,6 +85,7 @@ public class Tachometer extends Region {
     private Circle      backgroundCircle;
     private Text        display;
     private Polygon     propeller;
+    private Rectangle   pillar;
 
     //Switch
     private Circle      thumb;
@@ -192,6 +193,13 @@ public class Tachometer extends Region {
         frame = new Rectangle(backgroundCircle.getCenterX() * 0.92 , backgroundCircle.getCenterY() * 0.83, 25, 10);
         frame.getStyleClass().add("frame");
         frame.setMouseTransparent(true);
+
+        pillar = new Rectangle();
+        pillar.getStyleClass().add("pillar");
+        pillar.setX(130);
+        pillar.setY(150);
+        pillar.setWidth(40);
+        pillar.setHeight(57);
     }
 
     private void initializeDrawingPane() {
@@ -243,7 +251,7 @@ public class Tachometer extends Region {
     }
 
     private void layoutParts() {
-        drawingPane.getChildren().addAll(gauge, propeller, backgroundCircle, display, frame, thumb);
+        drawingPane.getChildren().addAll(pillar, propeller, gauge, backgroundCircle, display, frame, thumb);
         getChildren().add(drawingPane);
     }
 

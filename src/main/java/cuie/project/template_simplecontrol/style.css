@@ -27,3 +27,7 @@
     -fx-arc-height: 15;
     -fx-arc-width : 15;
 }
+
+.tachometer .pillar {
+    -fx-fill      : #B7C1C5;
+}
