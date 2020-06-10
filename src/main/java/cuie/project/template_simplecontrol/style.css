@@ -1,6 +1,6 @@
 .tachometer {
     -fx-padding:          5;
-    -fx-background-color: rgb(12, 12, 12);
+    -fx-background-color: #EDEDED;
     -base-color:          rgb(2, 138, 204);
 }
 
@@ -14,7 +14,7 @@
 
 .tachometer .display {
     -fx-font-family: 'Lato Light';
-    -fx-font-size:   24;
+    -fx-font-size:   11;
     -fx-fill:        black;
 }
 
